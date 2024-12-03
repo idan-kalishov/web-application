@@ -1,4 +1,4 @@
-const CommentModel = require('../models/commentsModel'); // Adjust the path to your model
+const CommentModel = require('../models/commentsModel');
 
 // Get all comments
 const getAllComments = async (req, res) => {
