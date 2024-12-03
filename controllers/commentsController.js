@@ -1,9 +1,10 @@
 const CommentModel = require('../models/commentsModel');
+const Post = require("../models/Post");
 
 // Get all comments
 const getAllComments = async (req, res) => {
     try {
-        const comments = await Comment.find();
+        const comments = await CommentModel.find();
         res.status(200).json(comments);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -41,13 +42,22 @@ const createComment = async (req, res) => {
     try {
         const commentBody = req.body;
 
+        // Create the comment
         const comment = await CommentModel.create(commentBody);
+
+        // Update the associated post by adding the comment ID
+        await Post.findByIdAndUpdate(
+            commentBody.postId, // Ensure `postId` is passed in the request body
+            { $push: { comments: comment._id } }, // Add the comment ID to the comments array
+            { new: true, useFindAndModify: false } // Return updated post (optional)
+        );
 
         res.status(201).json(comment);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
+
 
 // Update a comment by its ID
 const updateComment = async (req, res) => {
