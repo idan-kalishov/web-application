@@ -1,8 +1,14 @@
 const express = require("express");
 const mongoose = require("mongoose");
+const commentsRouter = require("./routes/commentsRoute");
+const bodyParser = require("body-parser");
 
 const app = express();
 app.use(express.json());
+
+app.use(bodyParser.json());
+
+app.use('/comments', commentsRouter);
 
 mongoose
   .connect("mongodb://localhost:27017/web-application", {
