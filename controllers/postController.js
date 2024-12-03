@@ -81,10 +81,28 @@ const updatePost = async (req, res) => {
   }
 };
 
+const deletePost = async (req, res) => {
+  const postId = req.params.post_id;
+
+  try {
+      // Find and delete the post
+      const deletedPost = await PostModel.findByIdAndDelete(postId);
+
+      if (!deletedPost) {
+          return res.status(404).json({ message: 'Post not found' });
+      }
+
+      res.status(200).json({ message: 'Post deleted successfully', deletedPost });
+  } catch (error) {
+      res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   addPost,
   getAllPosts,
   getPostById,
   getPostsBySender,
   updatePost,
+  deletePost
 };
