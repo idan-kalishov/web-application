@@ -41,7 +41,7 @@ const createComment = async (req, res) => {
     try {
         const commentBody = req.body;
 
-        await comment = CommentModel.create(commentBody);
+        const comment = await CommentModel.create(commentBody);
 
         res.status(201).json(comment);
     } catch (error) {
