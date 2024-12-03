@@ -12,6 +12,9 @@ commentsRouter.get('/:post_id', commentsController.getCommentsByPostId);
 
 commentsRouter.post('/', commentsController.createComment);
 
+commentsRouter.delete('/:comment_id', commentsController.deleteComment);
+
 commentsRouter.put('/:comment_id', commentsController.updateComment);
+
 
 module.exports = commentsRouter;
