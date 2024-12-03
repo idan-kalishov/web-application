@@ -79,10 +79,40 @@ const updateComment = async (req, res) => {
     }
 };
 
+const deleteComment = async (req, res) => {
+    const commentId = req.params.comment_id;
+
+    try {
+        // Find the comment to get its associated postId
+        const comment = await CommentModel.findById(commentId);
+
+        if (!comment) {
+            return res.status(404).json({ message: 'Comment not found' });
+        }
+
+        const { postId } = comment;
+
+        // Delete the comment
+        await CommentModel.findByIdAndDelete(commentId);
+
+        // Remove the comment ID from the post's comments array
+        await PostModel.findByIdAndUpdate(
+            postId,
+            { $pull: { comments: commentId } }, // Remove the comment ID from the array
+            { new: true, useFindAndModify: false }
+        );
+
+        res.status(200).json({ message: 'Comment deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 module.exports = {
     getAllComments,
     getCommentById,
     getCommentsByPostId,
     createComment,
-    updateComment
+    updateComment,
+    deleteComment
 };
