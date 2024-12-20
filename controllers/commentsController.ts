@@ -1,8 +1,10 @@
-const CommentModel = require('../models/commentsModel');
-const Post = require("../models/Post");
+import { Request, Response } from 'express';
+import { IComment } from '../models/commentsModel'; // Adjust the import path if needed
+import Post from '../models/Post'; // Adjust the import path if needed
+import CommentModel from '../models/commentsModel'; // Adjust the import path if needed
 
 // Get all comments
-const getAllComments = async (req, res) => {
+const getAllComments = async (req: Request, res: Response): Promise<void> => {
     try {
         const comments = await CommentModel.find();
         res.status(200).json(comments);
@@ -12,12 +14,13 @@ const getAllComments = async (req, res) => {
 };
 
 // Get a comment by its ID
-const getCommentById = async (req, res) => {
+const getCommentById = async (req: Request, res: Response): Promise<void> => {
     const commentId = req.params.comment_id;
     try {
         const comment = await CommentModel.findById(commentId);
         if (!comment) {
-            return res.status(404).json({ message: 'Comment not found' });
+            res.status(404).json({ message: 'Comment not found' });
+            return;
         }
         res.status(200).json(comment);
     } catch (error) {
@@ -26,8 +29,8 @@ const getCommentById = async (req, res) => {
 };
 
 // Get comments by postId
-const getCommentsByPostId = async (req, res) => {
-    const postId = req.query.post_id;
+const getCommentsByPostId = async (req: Request, res: Response): Promise<void> => {
+    const postId = req.query.post_id as string; // Casting query parameter to string
 
     try {
         const comments = await CommentModel.find({ postId: postId });
@@ -38,9 +41,9 @@ const getCommentsByPostId = async (req, res) => {
 };
 
 // Create a new comment
-const createComment = async (req, res) => {
+const createComment = async (req: Request, res: Response): Promise<void> => {
     try {
-        const commentBody = req.body;
+        const commentBody = req.body as IComment;
 
         // Create the comment
         const comment = await CommentModel.create(commentBody);
@@ -58,9 +61,8 @@ const createComment = async (req, res) => {
     }
 };
 
-
 // Update a comment by its ID
-const updateComment = async (req, res) => {
+const updateComment = async (req: Request, res: Response): Promise<void> => {
     try {
         const updatedComment = await CommentModel.findByIdAndUpdate(
             req.params.comment_id,
@@ -71,7 +73,8 @@ const updateComment = async (req, res) => {
             }
         );
         if (!updatedComment) {
-            return res.status(404).json({ message: 'Comment not found' });
+            res.status(404).json({ message: 'Comment not found' });
+            return;
         }
         res.status(200).json(updatedComment);
     } catch (error) {
@@ -79,7 +82,8 @@ const updateComment = async (req, res) => {
     }
 };
 
-const deleteComment = async (req, res) => {
+// Delete a comment
+const deleteComment = async (req: Request, res: Response): Promise<void> => {
     const commentId = req.params.comment_id;
 
     try {
@@ -87,7 +91,8 @@ const deleteComment = async (req, res) => {
         const comment = await CommentModel.findById(commentId);
 
         if (!comment) {
-            return res.status(404).json({ message: 'Comment not found' });
+            res.status(404).json({ message: 'Comment not found' });
+            return;
         }
 
         const { postId } = comment;
@@ -96,7 +101,7 @@ const deleteComment = async (req, res) => {
         await CommentModel.findByIdAndDelete(commentId);
 
         // Remove the comment ID from the post's comments array
-        await PostModel.findByIdAndUpdate(
+        await Post.findByIdAndUpdate(
             postId,
             { $pull: { comments: commentId } }, // Remove the comment ID from the array
             { new: true, useFindAndModify: false }
@@ -108,7 +113,7 @@ const deleteComment = async (req, res) => {
     }
 };
 
-module.exports = {
+export {
     getAllComments,
     getCommentById,
     getCommentsByPostId,
