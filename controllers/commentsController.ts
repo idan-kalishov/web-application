@@ -8,7 +8,7 @@ const getAllComments = async (req: Request, res: Response): Promise<void> => {
     try {
         const comments = await CommentModel.find();
         res.status(200).json(comments);
-    } catch (error) {
+    } catch (error: any) {
         res.status(500).json({ message: error.message });
     }
 };
@@ -23,7 +23,7 @@ const getCommentById = async (req: Request, res: Response): Promise<void> => {
             return;
         }
         res.status(200).json(comment);
-    } catch (error) {
+    } catch (error: any) {
         res.status(500).json({ message: error.message });
     }
 };
@@ -35,7 +35,7 @@ const getCommentsByPostId = async (req: Request, res: Response): Promise<void> =
     try {
         const comments = await CommentModel.find({ postId: postId });
         res.status(200).json(comments);
-    } catch (error) {
+    } catch (error: any) {
         res.status(500).json({ message: error.message });
     }
 };
@@ -56,7 +56,7 @@ const createComment = async (req: Request, res: Response): Promise<void> => {
         );
 
         res.status(201).json(comment);
-    } catch (error) {
+    } catch (error: any) {
         res.status(500).json({ message: error.message });
     }
 };
@@ -77,7 +77,7 @@ const updateComment = async (req: Request, res: Response): Promise<void> => {
             return;
         }
         res.status(200).json(updatedComment);
-    } catch (error) {
+    } catch (error: any) {
         res.status(500).json({ message: error.message });
     }
 };
@@ -108,7 +108,7 @@ const deleteComment = async (req: Request, res: Response): Promise<void> => {
         );
 
         res.status(200).json({ message: 'Comment deleted successfully' });
-    } catch (error) {
+    } catch (error: any) {
         res.status(500).json({ message: error.message });
     }
 };

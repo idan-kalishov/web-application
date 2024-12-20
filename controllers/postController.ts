@@ -91,7 +91,7 @@ const deletePost = async (req: Request, res: Response): Promise<Response> => {
     }
 
     return res.status(200).json({ message: 'Post deleted successfully', deletedPost });
-  } catch (error) {
+  } catch (error: any) {
     return res.status(500).json({ message: error.message });
   }
 };

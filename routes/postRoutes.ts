@@ -6,7 +6,7 @@ const router: Router = express.Router();
 router.post('/', async (req: Request, res: Response) => {
   try {
     await postController.addPost(req, res);
-  } catch (error) {
+  } catch (error: any) {
     res.status(500).send(error.message);
   }
 });
@@ -14,7 +14,7 @@ router.post('/', async (req: Request, res: Response) => {
 router.get('/data', async (req: Request, res: Response) => {
   try {
     await postController.getAllPosts(req, res);
-  } catch (error) {
+  } catch (error: any) {
     res.status(500).send(error.message);
   }
 });
@@ -22,7 +22,7 @@ router.get('/data', async (req: Request, res: Response) => {
 router.get('/:post_id', async (req: Request, res: Response) => {
   try {
     await postController.getPostById(req, res);
-  } catch (error) {
+  } catch (error: any) {
     res.status(500).send(error.message);
   }
 });
@@ -30,7 +30,7 @@ router.get('/:post_id', async (req: Request, res: Response) => {
 router.get('/', async (req: Request, res: Response) => {
   try {
     await postController.getPostsBySender(req, res);
-  } catch (error) {
+  } catch (error: any) {
     res.status(500).send(error.message);
   }
 });
@@ -38,7 +38,7 @@ router.get('/', async (req: Request, res: Response) => {
 router.put('/:post_id', async (req: Request, res: Response) => {
   try {
     await postController.updatePost(req, res);
-  } catch (error) {
+  } catch (error: any) {
     res.status(500).send(error.message);
   }
 });
@@ -46,7 +46,7 @@ router.put('/:post_id', async (req: Request, res: Response) => {
 router.delete('/:post_id', async (req: Request, res: Response) => {
   try {
     await postController.deletePost(req, res);
-  } catch (error) {
+  } catch (error: any) {
     res.status(500).send(error.message);
   }
 });
