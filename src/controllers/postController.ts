@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import Post from "../models/Post";
 
-// Define the structure of the request body for type safety
 interface PostRequestBody {
   title?: string;
   content?: string;
