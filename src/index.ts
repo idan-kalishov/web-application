@@ -1,4 +1,6 @@
 import express, { Application } from "express";
+import dotenv from "dotenv"
+dotenv.config();
 import mongoose from "mongoose";
 import postRoutes from "./routes/postRoutes";
 import commentsRouter from "./routes/commentsRoute";
@@ -16,10 +18,9 @@ app.use('/post', postRoutes);
 
 // MongoDB connection
 mongoose
-  .connect("mongodb://localhost:27017/web-application")
+  .connect(process.env.DB_CONNECT as string)
   .then(() => console.log("Connected to the database"))
   .catch((err: Error) => console.error("MongoDB connection error:", err));
 
 // Start the server
-const PORT = 3000;
-app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+app.listen(process.env.PORT, () => console.log(`Server running on http://localhost:${ process.env.PORT}`));
