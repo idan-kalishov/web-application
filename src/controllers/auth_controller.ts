@@ -1,155 +1,205 @@
 import { NextFunction, Request, Response } from 'express';
-import userModel, { IUser } from '../models/users_model';
+import userModel, { User } from '../models/User';
 import bcrypt from 'bcrypt';
-import jwt, { JwtPayload } from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 import { Document } from 'mongoose';
 
-const SALT_ROUNDS = 10;
+const register = async (req: Request, res: Response) => {
+    try {
+        const password = req.body.password;
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+        const user = await userModel.create({
+            email: req.body.email,
+            password: hashedPassword,
+            post: []
+        });
+        res.status(200).send(user);
+    } catch (err) {
+        res.status(400).send(err);
+    }
+};
 
 type tTokens = {
-    accessToken: string;
-    refreshToken: string;
-};
-
-type tUser = Document<unknown, {}, IUser> & IUser & { _id: string };
-
+    accessToken: string,
+    refreshToken: string
+}
 
 const generateToken = (userId: string): tTokens | null => {
-    const secret = process.env.TOKEN_SECRET;
-    const accessExpires = process.env.TOKEN_EXPIRES;
-    const refreshExpires = process.env.REFRESH_TOKEN_EXPIRES;
-
-    if (!secret || !accessExpires || !refreshExpires) return null;
-
+    if (!process.env.TOKEN_SECRET) {
+        return null;
+    }
+    // generate token
     const random = Math.random().toString();
-    const payload: JwtPayload = { _id: userId, random };
+    const accessToken = jwt.sign({
+            _id: userId,
+            random: random
+        },
+        process.env.TOKEN_SECRET,
+        { expiresIn: process.env.TOKEN_EXPIRES });
 
+    const refreshToken = jwt.sign({
+            _id: userId,
+            random: random
+        },
+        process.env.TOKEN_SECRET,
+        { expiresIn: process.env.REFRESH_TOKEN_EXPIRES });
     return {
-        accessToken: jwt.sign(payload, secret, { expiresIn: accessExpires }),
-        refreshToken: jwt.sign(payload, secret, { expiresIn: refreshExpires })
+        accessToken: accessToken,
+        refreshToken: refreshToken
     };
 };
-
-const register = async (req: Request, res: Response): Promise<Response> => {
+const login = async (req: Request, res: Response) => {
     try {
-        const { email, password }: { email: string; password: string } = req.body;
-        if (!email || !password) {
-            return res.status(400).json({ message: 'Email and password are required.' });
+        const user = await userModel.findOne({ email: req.body.email });
+        if (!user) {
+            res.status(400).send('wrong username or password');
+            return;
         }
-
-        const existingUser = await userModel.findOne({ email });
-        if (existingUser) {
-            return res.status(400).json({ message: 'Email is already in use.' });
+        const validPassword = await bcrypt.compare(req.body.password, user.password);
+        if (!validPassword) {
+            res.status(400).send('wrong username or password');
+            return;
         }
-
-        const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
-        const user = await userModel.create({ email, password: hashedPassword });
-
-        return res.status(201).json({ message: 'User registered successfully.', user });
-    } catch (err) {
-        return res.status(500).json({ message: 'Error registering user.', error: err });
-    }
-};
-
-const login = async (req: Request, res: Response): Promise<Response> => {
-    try {
-        const { email, password }: { email: string; password: string } = req.body;
-        if (!email || !password) {
-            return res.status(400).json({ message: 'Email and password are required.' });
+        if (!process.env.TOKEN_SECRET) {
+            res.status(500).send('Server Error');
+            return;
         }
-
-        const user = await userModel.findOne({ email });
-        if (!user || !(await bcrypt.compare(password, user.password))) {
-            return res.status(400).json({ message: 'Invalid email or password.' });
-        }
-
+        // generate token
         const tokens = generateToken(user._id);
         if (!tokens) {
-            return res.status(500).json({ message: 'Token generation failed.' });
+            res.status(500).send('Server Error');
+            return;
         }
-
-        user.refreshToken = [...(user.refreshToken || []), tokens.refreshToken];
+        if (!user.refreshToken) {
+            user.refreshToken = [];
+        }
+        user.refreshToken.push(tokens.refreshToken);
         await user.save();
+        res.status(200).send(
+            {
+                accessToken: tokens.accessToken,
+                refreshToken: tokens.refreshToken,
+                _id: user._id
+            });
 
-        return res.status(200).json({
-            accessToken: tokens.accessToken,
-            refreshToken: tokens.refreshToken,
-            userId: user._id
+    } catch (err) {
+        res.status(400).send(err);
+    }
+};
+
+type tUser = Document<unknown, {}, User> & User & Required<{
+    _id: string;
+}> & {
+    __v: number;
+}
+const verifyRefreshToken = (refreshToken: string | undefined) => {
+    return new Promise<tUser>((resolve, reject) => {
+        //get refresh token from body
+        if (!refreshToken) {
+            reject("fail");
+            return;
+        }
+        //verify token
+        if (!process.env.TOKEN_SECRET) {
+            reject("fail");
+            return;
+        }
+        jwt.verify(refreshToken, process.env.TOKEN_SECRET, async (err: any, payload: any) => {
+            if (err) {
+                reject("fail");
+                return
+            }
+            //get the user id fromn token
+            const userId = payload._id;
+            try {
+                //get the user form the db
+                const user = await userModel.findById(userId);
+                if (!user) {
+                    reject("fail");
+                    return;
+                }
+                if (!user.refreshToken || !user.refreshToken.includes(refreshToken)) {
+                    user.refreshToken = [];
+                    await user.save();
+                    reject("fail");
+                    return;
+                }
+                const tokens = user.refreshToken!.filter((token) => token !== refreshToken);
+                user.refreshToken = tokens;
+
+                resolve(user);
+            } catch (err) {
+                reject("fail");
+                return;
+            }
         });
-    } catch (err) {
-        return res.status(500).json({ message: 'Error logging in.', error: err });
-    }
-};
+    });
+}
 
-const verifyRefreshToken = async (refreshToken: string): Promise<tUser> => {
-    const secret = process.env.TOKEN_SECRET;
-    if (!secret) throw new Error('Token secret is not defined.');
-
-    const payload = jwt.verify(refreshToken, secret) as JwtPayload;
-    const user = await userModel.findById(payload._id);
-
-    if (!user || !user.refreshToken?.includes(refreshToken)) {
-        throw new Error('Invalid refresh token.');
-    }
-
-    user.refreshToken = user.refreshToken.filter(token => token !== refreshToken);
-    await user.save();
-
-    return user;
-};
-
-const logout = async (req: Request, res: Response): Promise<Response> => {
+const logout = async (req: Request, res: Response) => {
     try {
-        const { refreshToken }: { refreshToken: string } = req.body;
-        if (!refreshToken) return res.status(400).json({ message: 'Refresh token is required.' });
-
-        await verifyRefreshToken(refreshToken);
-        return res.status(200).json({ message: 'Logged out successfully.' });
+        const user = await verifyRefreshToken(req.body.refreshToken);
+        await user.save();
+        res.status(200).send("success");
     } catch (err) {
-        return res.status(400).json({ message: 'Error during logout.', error: err.message });
+        res.status(400).send("fail");
     }
 };
 
-const refresh = async (req: Request, res: Response): Promise<Response> => {
+const refresh = async (req: Request, res: Response) => {
     try {
-        const { refreshToken }: { refreshToken: string } = req.body;
-        if (!refreshToken) return res.status(400).json({ message: 'Refresh token is required.' });
-
-        const user = await verifyRefreshToken(refreshToken);
+        const user = await verifyRefreshToken(req.body.refreshToken);
+        if (!user) {
+            res.status(400).send("fail");
+            return;
+        }
         const tokens = generateToken(user._id);
 
-        if (!tokens) return res.status(500).json({ message: 'Token generation failed.' });
-
-        user.refreshToken = [...(user.refreshToken || []), tokens.refreshToken];
+        if (!tokens) {
+            res.status(500).send('Server Error');
+            return;
+        }
+        if (!user.refreshToken) {
+            user.refreshToken = [];
+        }
+        user.refreshToken.push(tokens.refreshToken);
         await user.save();
-
-        return res.status(200).json({
-            accessToken: tokens.accessToken,
-            refreshToken: tokens.refreshToken,
-            userId: user._id
-        });
+        res.status(200).send(
+            {
+                accessToken: tokens.accessToken,
+                refreshToken: tokens.refreshToken,
+                _id: user._id
+            });
+        //send new token
     } catch (err) {
-        return res.status(400).json({ message: 'Error refreshing token.', error: err.message });
+        res.status(400).send("fail");
     }
 };
 
-// Middleware to protect routes
-const authMiddleware = (req: Request, res: Response, next: NextFunction): void => {
-    const authorization = req.header('Authorization');
-    const token = authorization?.split(' ')[1];
-    const secret = process.env.TOKEN_SECRET;
+type Payload = {
+    _id: string;
+};
 
-    if (!token || !secret) {
-        res.status(401).json({ message: 'Access denied.' });
+export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
+    const authorization = req.header('authorization');
+    const token = authorization && authorization.split(' ')[1];
+
+    if (!token) {
+        res.status(401).send('Access Denied');
+        return;
+    }
+    if (!process.env.TOKEN_SECRET) {
+        res.status(500).send('Server Error');
         return;
     }
 
-    jwt.verify(token, secret, (err, payload) => {
+    jwt.verify(token, process.env.TOKEN_SECRET, (err, payload) => {
         if (err) {
-            res.status(401).json({ message: 'Invalid token.' });
+            res.status(401).send('Access Denied');
             return;
         }
-        req.params.userId = (payload as JwtPayload)._id;
+        req.params.userId = (payload as Payload)._id;
         next();
     });
 };
@@ -158,6 +208,5 @@ export default {
     register,
     login,
     refresh,
-    logout,
-    authMiddleware
+    logout
 };
