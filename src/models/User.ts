@@ -1,10 +1,12 @@
 import mongoose from "mongoose";
+import {IPost} from "./Post";
 
 export interface IUser {
     email: string;
     password: string;
     _id?: string;
     refreshToken?: string[];
+    post?: IPost;
 }
 
 const userSchema = new mongoose.Schema<IUser>({
@@ -20,6 +22,9 @@ const userSchema = new mongoose.Schema<IUser>({
     refreshToken: {
         type: [String],
         default: [],
+    },
+    post: {
+        [{ type: mongoose.Schema.Types.ObjectId, ref: 'Post' }]
     }
 });
 
