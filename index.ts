@@ -1,8 +1,9 @@
 import express, { Application } from "express";
 import mongoose from "mongoose";
 import postRoutes from "./routes/postRoutes";
-import commentsRouter from "./routes/commentsRoute";
+import commentsRoutes from "./routes/commentsRoute";
 import bodyParser from "body-parser";
+import authRoutes from "./routes/auth.Routes";
 
 const app: Application = express();
 
@@ -11,14 +12,20 @@ app.use(express.json());
 app.use(bodyParser.json());
 
 // Routes
-app.use('/comments', commentsRouter);
-app.use('/post', postRoutes);
+app.use('/comments', commentsRoutes);
+app.use('/posts', postRoutes);
+app.use('/users', authRoutes)
 
 // MongoDB connection
+if (!process.env.DB_CONNECT) {
+    throw new Error('DB_CONNECT environment variable is not defined');
+}
+
 mongoose
-  .connect("mongodb://localhost:27017/web-application")
+  .connect(process.env.DB_CONNECT)
   .then(() => console.log("Connected to the database"))
   .catch((err: Error) => console.error("MongoDB connection error:", err));
+
 
 // Start the server
 const PORT = 3000;
