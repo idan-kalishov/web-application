@@ -1,11 +1,13 @@
 import express, { Application } from "express";
 import mongoose from "mongoose";
-import postRoutes from "./routes/postRoutes";
-import commentsRoutes from "./routes/commentsRoute";
+import postRoutes from './src/routes/postRoutes';
+import commentsRoutes from "./src/routes/commentsRoute";
 import bodyParser from "body-parser";
-import authRoutes from "./routes/auth.Routes";
+import authRoutes from "./src/routes/authRoutes";
+import dotenv from "dotenv"
 
 const app: Application = express();
+dotenv.config();
 
 // Middleware to parse JSON bodies
 app.use(express.json());
@@ -14,7 +16,7 @@ app.use(bodyParser.json());
 // Routes
 app.use('/comments', commentsRoutes);
 app.use('/posts', postRoutes);
-app.use('/users', authRoutes)
+app.use('/auth', authRoutes)
 
 // MongoDB connection
 if (!process.env.DB_CONNECT) {

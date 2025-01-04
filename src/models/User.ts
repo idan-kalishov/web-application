@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, {Schema} from "mongoose";
 import {IPost} from "./Post";
 
 export interface IUser {
@@ -9,7 +9,7 @@ export interface IUser {
     post?: IPost;
 }
 
-const userSchema = new mongoose.Schema<IUser>({
+const userSchema = new Schema({
     email: {
         type: String,
         required: true,
@@ -24,10 +24,12 @@ const userSchema = new mongoose.Schema<IUser>({
         default: [],
     },
     post: {
-        [{ type: mongoose.Schema.Types.ObjectId, ref: 'Post' }]
+        required: false,
+        type: [{type: mongoose.Schema.Types.ObjectId, ref: 'Post'}]
     }
+
 });
 
-const userModel = mongoose.model<IUser>("Users", userSchema);
+const userModel = mongoose.model("Users", userSchema);
 
 export default userModel;

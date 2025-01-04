@@ -5,6 +5,7 @@ import mongoose from "mongoose";
 import postRoutes from "./routes/postRoutes";
 import commentsRouter from "./routes/commentsRoute";
 import bodyParser from "body-parser";
+import authRouter from "./routes/authRoutes";
 
 const initApp = async (): Promise<Application> => {
   const app: Application = express();
@@ -14,8 +15,9 @@ const initApp = async (): Promise<Application> => {
   app.use(bodyParser.json());
 
   // Routes
+  app.use("/auth", authRouter)
   app.use("/comments", commentsRouter);
-  app.use("/post", postRoutes);
+  app.use("/posts", postRoutes);
 
   // MongoDB connection
   try {
@@ -33,13 +35,13 @@ const initApp = async (): Promise<Application> => {
 if (require.main === module) {
   const PORT = process.env.PORT || 3000;
   initApp()
-    .then((app) =>
-      app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`))
-    )
-    .catch((err) => {
-      console.error("Failed to start the server:", err);
-      process.exit(1); // Exit with failure code
-    });
+      .then((app) =>
+          app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`))
+      )
+      .catch((err) => {
+        console.error("Failed to start the server:", err);
+        process.exit(1); // Exit with failure code
+      });
 }
 
 export default initApp;
