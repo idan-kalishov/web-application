@@ -7,7 +7,7 @@ import Post from '../models/Post';
 describe('Post Controller Tests', () => {
   let mockPostId: string = '';
 
-  let app: Application;  
+  let app: Application;
 
   beforeAll(async () => {
     app = await initApp();
@@ -42,7 +42,7 @@ describe('Post Controller Tests', () => {
       owner: 'User456',
     };
 
-    const response = await request(app).post('/post').send(newPost);
+    const response = await request(app).post('/posts').send(newPost);
 
     expect(response.status).toBe(201);
     expect(response.body.title).toBe(newPost.title);
@@ -50,7 +50,7 @@ describe('Post Controller Tests', () => {
   });
 
   test('GET /posts - should fetch all posts', async () => {
-    const response = await request(app).get('/post');
+    const response = await request(app).get('/posts');
 
     expect(response.status).toBe(200);
     expect(response.body).toBeInstanceOf(Array);
@@ -58,14 +58,14 @@ describe('Post Controller Tests', () => {
   });
 
   test('GET /posts/:post_id - should fetch a post by ID', async () => {
-    const response = await request(app).get(`/post/${mockPostId}`);
+    const response = await request(app).get(`/posts/${mockPostId}`);
 
     expect(response.status).toBe(200);
     expect(response.body._id).toBe(mockPostId.toString());
   });
 
   test('GET /posts?sender=:sender - should fetch posts by sender', async () => {
-    const response = await request(app).get('/post?sender=User123');
+    const response = await request(app).get('/posts?sender=User123');
 
     expect(response.status).toBe(200);
     expect(response.body).toBeInstanceOf(Array);
@@ -78,7 +78,7 @@ describe('Post Controller Tests', () => {
       content: 'This is an updated post.',
     };
 
-    const response = await request(app).put(`/post/${mockPostId}`).send(updatedData);
+    const response = await request(app).put(`/posts/${mockPostId}`).send(updatedData);
 
     expect(response.status).toBe(200);
     expect(response.body.title).toBe(updatedData.title);
@@ -86,7 +86,7 @@ describe('Post Controller Tests', () => {
   });
 
   test('DELETE /posts/:post_id - should delete a post', async () => {
-    const response = await request(app).delete(`/post/${mockPostId}`);
+    const response = await request(app).delete(`/posts/${mockPostId}`);
 
     expect(response.status).toBe(200);
     expect(response.body.message).toBe('Post deleted successfully.');

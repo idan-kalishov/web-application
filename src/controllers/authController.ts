@@ -13,9 +13,9 @@ const register = async (req: Request, res: Response) => {
         return;
     }
 
-    try {
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
+        try {
+            const salt = await bcrypt.genSalt(10);
+            const hashedPassword = await bcrypt.hash(password, salt);
 
         const user = await userModel.create({
             email,
@@ -89,6 +89,7 @@ const login = async (req: Request, res: Response) => {
         if (!user.refreshToken) {
             user.refreshToken = [];
         }
+        
         user.refreshToken.push(tokens.refreshToken);
         await user.save();
         res.status(200).send(
@@ -143,7 +144,7 @@ const verifyRefreshToken = (refreshToken: string | undefined) => {
                 const tokens = user.refreshToken!.filter((token) => token !== refreshToken);
                 user.refreshToken = tokens;
 
-                // resolve(user);
+                resolve(user);
             } catch (err) {
                 reject("fail");
                 return;

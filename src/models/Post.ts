@@ -5,7 +5,7 @@ export interface IPost extends Document {
     title: string;
     content?: string;
     owner: string;
-    comments?: IComment[];
+    comments: IComment[];
 }
 
 const postSchema = new Schema<IPost>({

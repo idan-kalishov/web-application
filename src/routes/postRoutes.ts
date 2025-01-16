@@ -1,5 +1,6 @@
 import express, { Request, Response } from 'express';
-import * as postController from '../controllers/postController'; // Adjust the import if necessary
+import * as postController from '../controllers/postController';
+import {authMiddleware} from "../controllers/authController"; // Adjust the import if necessary
 
 const postRouter = express.Router();
 

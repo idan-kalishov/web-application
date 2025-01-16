@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "nodemon ./index.ts",
     "start": "ts-node src/index.ts",
-    "test": "jest",
+    "test": "jest --runInBand",
     "testPost": "jest --detectOpenHandles --forceExit src/tests/posts.test.ts",
     "testAuth": "jest --detectOpenHandles --forceExit src/tests/auth.test.ts",
     "test:watch": "jest --watch"
