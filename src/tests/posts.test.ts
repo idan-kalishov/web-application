@@ -35,6 +35,26 @@ describe('Post Controller Tests', () => {
     await Post.deleteMany({});
   });
 
+  test('POST /posts - should fail without required fields', async () => {
+    const incompletePost = {
+      content: 'Missing title and owner.'
+    };
+  
+    const response = await request(app).post('/posts').send(incompletePost);
+  
+    expect(response.status).toBe(400);
+    expect(response.body.error).toContain("Title and owner are required.");
+  });
+
+  test('GET /posts/:post_id - should handle non-existing post', async () => {
+    const nonExistingId = new mongoose.Types.ObjectId();
+  
+    const response = await request(app).get(`/posts/${nonExistingId}`);
+  
+    expect(response.status).toBe(404);
+    expect(response.body.error).toBe("Post not found.");
+  });
+
   test('POST /posts - should create a new post', async () => {
     const newPost = {
       title: 'New Post',
@@ -55,6 +75,25 @@ describe('Post Controller Tests', () => {
     expect(response.status).toBe(200);
     expect(response.body).toBeInstanceOf(Array);
     expect(response.body.length).toBeGreaterThan(0);
+  });
+
+  test('PUT /posts/:post_id - should handle updates for non-existing post', async () => {
+    const nonExistingId = new mongoose.Types.ObjectId();
+    const updatedData = { title: 'Updated', content: 'Updated content' };
+  
+    const response = await request(app).put(`/posts/${nonExistingId}`).send(updatedData);
+  
+    expect(response.status).toBe(404);
+    expect(response.body.error).toBe("Post not found.");
+  });
+
+  test('DELETE /posts/:post_id - should handle deletion of non-existing post', async () => {
+    const nonExistingId = new mongoose.Types.ObjectId();
+  
+    const response = await request(app).delete(`/posts/${nonExistingId}`);
+  
+    expect(response.status).toBe(404);
+    expect(response.body.message).toBe("Post not found.");
   });
 
   test('GET /posts/:post_id - should fetch a post by ID', async () => {

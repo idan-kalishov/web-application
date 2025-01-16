@@ -2,6 +2,12 @@ import express, { Request, Response } from 'express';
 import * as commentsController from '../controllers/commentsController'; // Adjust the import if necessary
 
 const commentsRoutes = express.Router();
+/**
+* @swagger
+* tags:
+*   name: Comments
+*   description: The Comments API
+*/
 
 // Define routes and associate them with the controller methods
 commentsRoutes.get('/', (req: Request, res: Response) => commentsController.getAllComments(req, res));
