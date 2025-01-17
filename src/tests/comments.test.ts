@@ -118,4 +118,43 @@ describe('Comments Controller Tests', () => {
     expect(updatedPost?.comments).not.toContain(comment._id);  
 });
 
+  test('PUT /comments/:comment_id - non-existent comment update', async () => {
+    const fakeId = new mongoose.Types.ObjectId();
+    const updatedData = {
+      message: 'No comment to update',
+    };
+
+    CommentModel.findByIdAndUpdate = jest.fn().mockResolvedValue(null);
+
+    const response = await request(app).put(`/comments/${fakeId}`).send(updatedData);
+
+    expect(response.status).toBe(404);
+    expect(response.body.message).toBe('Comment not found');
+  });
+
+  test('GET /comments - error when fetching comments by postId', async () => {
+    const invalidPostId = 'invalid-post-id';
+    CommentModel.find = jest.fn().mockRejectedValue(new Error('Database failure'));
+
+    const response = await request(app).get(`/comments?post_id=${invalidPostId}`);
+
+    expect(response.status).toBe(500);
+    expect(response.body.message).toBe('Database failure');
+  });
+
+  test('DELETE /comments/:comment_id - database error on deletion', async () => {
+    const comment = await CommentModel.create({
+        user: 'Temp User',
+        message: 'Temp message',
+        postId: mockPostId,
+    });
+
+    CommentModel.findByIdAndDelete = jest.fn().mockRejectedValue(new Error('Database failure'));
+
+    const response = await request(app).delete(`/comments/${comment._id}`);
+  
+    expect(response.status).toBe(500);
+    expect(response.body.message).toBe('Database failure');
+});
+
 });

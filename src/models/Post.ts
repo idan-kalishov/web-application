@@ -1,10 +1,11 @@
 import mongoose, { Document, Schema } from 'mongoose';
+import {IComment} from "./commentsModel";
 
 export interface IPost extends Document {
     title: string;
     content?: string;
     owner: string;
-    comments: mongoose.Types.ObjectId[]; 
+    comments: IComment[];
 }
 
 const postSchema = new Schema<IPost>({
